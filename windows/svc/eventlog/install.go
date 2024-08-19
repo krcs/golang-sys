@@ -20,8 +20,48 @@ const (
 	Error   = windows.EVENTLOG_ERROR_TYPE
 )
 
-const addKeyName = `SYSTEM\CurrentControlSet\Services\EventLog\Application`
+const eventLogKey = `SYSTEM\CurrentControlSet\Services\EventLog`
+const defMsgFile =  `C:\Windows\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll`
 
+const addKeyName =  `SYSTEM\CurrentControlSet\Services\EventLog\Application`
+
+//  Creates an event log and source in "Applications and Services Logs".
+func InstallAppSrc(appName string, src string, eventsSupported uint32) error {
+	eventKey, err := registry.OpenKey(registry.LOCAL_MACHINE, eventLogKey, registry.CREATE_SUB_KEY)
+	if err != nil {
+		return err
+	}
+	defer eventKey.Close()
+
+	appKey, _ , err := registry.CreateKey(eventKey, appName, registry.CREATE_SUB_KEY)
+	if err != nil {
+		return err
+	}
+	defer appKey.Close()
+
+	sk, srcKeyExist, err := registry.CreateKey(appKey, src, registry.SET_VALUE)
+	if err != nil {
+		return err
+	}
+	defer sk.Close()
+
+	if srcKeyExist {
+		return nil
+	}
+
+	err = sk.SetExpandStringValue("EventMessageFile", defMsgFile)
+	if err != nil {
+		return err
+	}
+
+	err = sk.SetDWordValue("TypesSupported", eventsSupported)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
 // Install modifies PC registry to allow logging with an event source src.
 // It adds all required keys and values to the event log registry key.
 // Install uses msgFile as the event message file. If useExpandKey is true,
@@ -77,4 +117,25 @@ func Remove(src string) error {
 	}
 	defer appkey.Close()
 	return registry.DeleteKey(appkey, src)
+}
+
+func RemoveApp(appName string) error {
+	eventKey, err := registry.OpenKey(registry.LOCAL_MACHINE, eventLogKey, registry.CREATE_SUB_KEY)
+	if err != nil {
+		return err
+	}
+	defer eventKey.Close()
+
+	return registry.DeleteKey(eventKey, appName)
+}
+
+func RemoveAppSrc(appName string, src string) error {
+	appKeyPath := eventLogKey + `\` + appName
+	appKey, err := registry.OpenKey(registry.LOCAL_MACHINE, appKeyPath, registry.SET_VALUE)
+	if err != nil {
+		return err
+	}
+	defer appKey.Close()
+
+	return registry.DeleteKey(appKey, src)
 }
