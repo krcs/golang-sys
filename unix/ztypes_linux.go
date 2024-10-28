@@ -87,31 +87,35 @@ type StatxTimestamp struct {
 }
 
 type Statx_t struct {
-	Mask             uint32
-	Blksize          uint32
-	Attributes       uint64
-	Nlink            uint32
-	Uid              uint32
-	Gid              uint32
-	Mode             uint16
-	_                [1]uint16
-	Ino              uint64
-	Size             uint64
-	Blocks           uint64
-	Attributes_mask  uint64
-	Atime            StatxTimestamp
-	Btime            StatxTimestamp
-	Ctime            StatxTimestamp
-	Mtime            StatxTimestamp
-	Rdev_major       uint32
-	Rdev_minor       uint32
-	Dev_major        uint32
-	Dev_minor        uint32
-	Mnt_id           uint64
-	Dio_mem_align    uint32
-	Dio_offset_align uint32
-	Subvol           uint64
-	_                [11]uint64
+	Mask                      uint32
+	Blksize                   uint32
+	Attributes                uint64
+	Nlink                     uint32
+	Uid                       uint32
+	Gid                       uint32
+	Mode                      uint16
+	_                         [1]uint16
+	Ino                       uint64
+	Size                      uint64
+	Blocks                    uint64
+	Attributes_mask           uint64
+	Atime                     StatxTimestamp
+	Btime                     StatxTimestamp
+	Ctime                     StatxTimestamp
+	Mtime                     StatxTimestamp
+	Rdev_major                uint32
+	Rdev_minor                uint32
+	Dev_major                 uint32
+	Dev_minor                 uint32
+	Mnt_id                    uint64
+	Dio_mem_align             uint32
+	Dio_offset_align          uint32
+	Subvol                    uint64
+	Atomic_write_unit_min     uint32
+	Atomic_write_unit_max     uint32
+	Atomic_write_segments_max uint32
+	_                         [1]uint32
+	_                         [9]uint64
 }
 
 type Fsid struct {
@@ -3790,7 +3794,7 @@ const (
 	ETHTOOL_MSG_PSE_GET                       = 0x24
 	ETHTOOL_MSG_PSE_SET                       = 0x25
 	ETHTOOL_MSG_RSS_GET                       = 0x26
-	ETHTOOL_MSG_USER_MAX                      = 0x2b
+	ETHTOOL_MSG_USER_MAX                      = 0x2c
 	ETHTOOL_MSG_KERNEL_NONE                   = 0x0
 	ETHTOOL_MSG_STRSET_GET_REPLY              = 0x1
 	ETHTOOL_MSG_LINKINFO_GET_REPLY            = 0x2
@@ -3830,7 +3834,7 @@ const (
 	ETHTOOL_MSG_MODULE_NTF                    = 0x24
 	ETHTOOL_MSG_PSE_GET_REPLY                 = 0x25
 	ETHTOOL_MSG_RSS_GET_REPLY                 = 0x26
-	ETHTOOL_MSG_KERNEL_MAX                    = 0x2b
+	ETHTOOL_MSG_KERNEL_MAX                    = 0x2c
 	ETHTOOL_FLAG_COMPACT_BITSETS              = 0x1
 	ETHTOOL_FLAG_OMIT_REPLY                   = 0x2
 	ETHTOOL_FLAG_STATS                        = 0x4
@@ -3975,7 +3979,7 @@ const (
 	ETHTOOL_A_COALESCE_RATE_SAMPLE_INTERVAL   = 0x17
 	ETHTOOL_A_COALESCE_USE_CQE_MODE_TX        = 0x18
 	ETHTOOL_A_COALESCE_USE_CQE_MODE_RX        = 0x19
-	ETHTOOL_A_COALESCE_MAX                    = 0x1c
+	ETHTOOL_A_COALESCE_MAX                    = 0x1e
 	ETHTOOL_A_PAUSE_UNSPEC                    = 0x0
 	ETHTOOL_A_PAUSE_HEADER                    = 0x1
 	ETHTOOL_A_PAUSE_AUTONEG                   = 0x2
@@ -4105,6 +4109,106 @@ type EthtoolDrvinfo struct {
 	Eedump_len   uint32
 	Regdump_len  uint32
 }
+
+type EthtoolTsInfo struct {
+	Cmd             uint32
+	So_timestamping uint32
+	Phc_index       int32
+	Tx_types        uint32
+	Tx_reserved     [3]uint32
+	Rx_filters      uint32
+	Rx_reserved     [3]uint32
+}
+
+type HwTstampConfig struct {
+	Flags     int32
+	Tx_type   int32
+	Rx_filter int32
+}
+
+const (
+	HWTSTAMP_FILTER_NONE            = 0x0
+	HWTSTAMP_FILTER_ALL             = 0x1
+	HWTSTAMP_FILTER_SOME            = 0x2
+	HWTSTAMP_FILTER_PTP_V1_L4_EVENT = 0x3
+	HWTSTAMP_FILTER_PTP_V2_L4_EVENT = 0x6
+	HWTSTAMP_FILTER_PTP_V2_L2_EVENT = 0x9
+	HWTSTAMP_FILTER_PTP_V2_EVENT    = 0xc
+)
+
+const (
+	HWTSTAMP_TX_OFF          = 0x0
+	HWTSTAMP_TX_ON           = 0x1
+	HWTSTAMP_TX_ONESTEP_SYNC = 0x2
+)
+
+type (
+	PtpClockCaps struct {
+		Max_adj            int32
+		N_alarm            int32
+		N_ext_ts           int32
+		N_per_out          int32
+		Pps                int32
+		N_pins             int32
+		Cross_timestamping int32
+		Adjust_phase       int32
+		Max_phase_adj      int32
+		Rsv                [11]int32
+	}
+	PtpClockTime struct {
+		Sec      int64
+		Nsec     uint32
+		Reserved uint32
+	}
+	PtpExttsEvent struct {
+		T     PtpClockTime
+		Index uint32
+		Flags uint32
+		Rsv   [2]uint32
+	}
+	PtpExttsRequest struct {
+		Index uint32
+		Flags uint32
+		Rsv   [2]uint32
+	}
+	PtpPeroutRequest struct {
+		StartOrPhase PtpClockTime
+		Period       PtpClockTime
+		Index        uint32
+		Flags        uint32
+		On           PtpClockTime
+	}
+	PtpPinDesc struct {
+		Name  [64]byte
+		Index uint32
+		Func  uint32
+		Chan  uint32
+		Rsv   [5]uint32
+	}
+	PtpSysOffset struct {
+		Samples uint32
+		Rsv     [3]uint32
+		Ts      [51]PtpClockTime
+	}
+	PtpSysOffsetExtended struct {
+		Samples uint32
+		Rsv     [3]uint32
+		Ts      [25][3]PtpClockTime
+	}
+	PtpSysOffsetPrecise struct {
+		Device   PtpClockTime
+		Realtime PtpClockTime
+		Monoraw  PtpClockTime
+		Rsv      [4]uint32
+	}
+)
+
+const (
+	PTP_PF_NONE    = 0x0
+	PTP_PF_EXTTS   = 0x1
+	PTP_PF_PEROUT  = 0x2
+	PTP_PF_PHYSYNC = 0x3
+)
 
 type (
 	HIDRawReportDescriptor struct {
@@ -4633,7 +4737,7 @@ const (
 	NL80211_ATTR_MAC_HINT                                   = 0xc8
 	NL80211_ATTR_MAC_MASK                                   = 0xd7
 	NL80211_ATTR_MAX_AP_ASSOC_STA                           = 0xca
-	NL80211_ATTR_MAX                                        = 0x14a
+	NL80211_ATTR_MAX                                        = 0x14c
 	NL80211_ATTR_MAX_CRIT_PROT_DURATION                     = 0xb4
 	NL80211_ATTR_MAX_CSA_COUNTERS                           = 0xce
 	NL80211_ATTR_MAX_MATCH_SETS                             = 0x85
@@ -5237,7 +5341,7 @@ const (
 	NL80211_FREQUENCY_ATTR_GO_CONCURRENT                    = 0xf
 	NL80211_FREQUENCY_ATTR_INDOOR_ONLY                      = 0xe
 	NL80211_FREQUENCY_ATTR_IR_CONCURRENT                    = 0xf
-	NL80211_FREQUENCY_ATTR_MAX                              = 0x20
+	NL80211_FREQUENCY_ATTR_MAX                              = 0x21
 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER                     = 0x6
 	NL80211_FREQUENCY_ATTR_NO_10MHZ                         = 0x11
 	NL80211_FREQUENCY_ATTR_NO_160MHZ                        = 0xc
